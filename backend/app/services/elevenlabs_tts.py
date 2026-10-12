@@ -15,8 +15,7 @@ class ElevenLabsTTSService:
 
     def __init__(self):
         self.api_key = settings.ELEVENLABS_API_KEY
-        self.voice_id = settings.ELEVENLABS_VOICE_ID or "21m00Tcm4TlvDq8ikWAM"
-        self.api_url = f"https://api.elevenlabs.io/v1/text-to-speech/{self.voice_id}"
+        self.voice_id = settings.ELEVENLABS_VOICE_ID or "nPczCjzI2devNBz1zQrb"
 
     def compose_briefing_transcript(self, trail: Trail, hiker_name: str = "Adventurer") -> str:
         """
@@ -104,12 +103,13 @@ class ElevenLabsTTSService:
         hiker_name: str = "Adventurer"
     ) -> AudioBriefingResponse:
         transcript = self.compose_briefing_transcript(trail, hiker_name)
-        target_voice = voice_id or self.voice_id
+        api_key = settings.ELEVENLABS_API_KEY or self.api_key
+        target_voice = voice_id or settings.ELEVENLABS_VOICE_ID or self.voice_id or "nPczCjzI2devNBz1zQrb"
 
-        if self.api_key:
+        if api_key:
             try:
                 headers = {
-                    "xi-api-key": self.api_key,
+                    "xi-api-key": api_key,
                     "Content-Type": "application/json"
                 }
                 payload = {
@@ -138,7 +138,7 @@ class ElevenLabsTTSService:
                             audio_mime_type="audio/mpeg",
                             duration_seconds=45,
                             transcript=transcript,
-                            voice_engine="ElevenLabs Turbo v2.5 (Touch Grass Trailhead Mode)"
+                            voice_engine=f"ElevenLabs Turbo v2.5 ({target_voice})"
                         )
                     else:
                         print(f"[ElevenLabs] API responded with status {resp.status_code}: {resp.text}")

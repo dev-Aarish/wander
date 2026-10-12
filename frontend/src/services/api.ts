@@ -208,12 +208,20 @@ export async function fetchPhenologyTimeline(trailId: string): Promise<Phenology
   }
 }
 
-export async function fetchAudioBriefing(trailId: string, hikerName = "Adventurer"): Promise<AudioBriefingResponse> {
+export async function fetchAudioBriefing(
+  trailId: string,
+  hikerName = "Adventurer",
+  voiceId?: string
+): Promise<AudioBriefingResponse> {
   try {
     const res = await fetch(`${BASE_URL}/audio/briefing`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ trail_id: trailId, hiker_name: hikerName })
+      body: JSON.stringify({
+        trail_id: trailId,
+        hiker_name: hikerName,
+        voice_id: voiceId || undefined
+      })
     });
     if (!res.ok) throw new Error('Audio briefing failed');
     return await res.json();

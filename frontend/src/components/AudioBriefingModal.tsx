@@ -1,15 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trail, AudioBriefingResponse } from '../types';
 import { fetchAudioBriefing } from '../services/api';
-import { Volume2, Play, Pause, RotateCcw, X, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Volume2, Play, Pause, RotateCcw, X, Sparkles, CheckCircle2, AlertTriangle, Mic } from 'lucide-react';
 
 interface AudioBriefingModalProps {
   trail: Trail | null;
   onClose: () => void;
 }
 
+const CURATED_VOICES = [
+  { id: 'nPczCjzI2devNBz1zQrb', name: '🌲 Brian (Nature Storyteller)', desc: 'Deep, resonant, National Geographic documentary style' },
+  { id: 'pNInz6obpgDQGcFmaJgB', name: '🍂 Adam (Warm Trail Guide)', desc: 'Deep, engaging, friendly outdoor guide' },
+  { id: 'IKne3meq5aSn9XLyUdCD', name: '⛰️ Charlie (Energetic Explorer)', desc: 'Dynamic, confident adventurer' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: '🍁 Sarah (Naturalist)', desc: 'Expressive, calm, gentle ranger' },
+  { id: '21m00Tcm4TlvDq8ikWAM', name: '🌿 Rachel (Classic Narrator)', desc: 'Clear, articulate, calm' },
+  { id: 'custom', name: '⚙️ Custom Voice ID...', desc: 'Paste your custom ElevenLabs voice clone ID' },
+];
+
 export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, onClose }) => {
   const [hikerName, setHikerName] = useState('Adventurer');
+  const [selectedVoice, setSelectedVoice] = useState('nPczCjzI2devNBz1zQrb');
+  const [customVoiceId, setCustomVoiceId] = useState('');
   const [briefing, setBriefing] = useState<AudioBriefingResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -19,23 +30,30 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressTimerRef = useRef<number | null>(null);
 
-  useEffect(() => {
+  const activeVoiceId = selectedVoice === 'custom' ? customVoiceId.trim() : selectedVoice;
+
+  const loadBriefing = () => {
     if (!trail) return;
     setLoading(true);
-    setIsPlaying(false);
-    setProgress(0);
+    stopPlayback();
 
-    fetchAudioBriefing(trail.id, hikerName)
+    fetchAudioBriefing(trail.id, hikerName, activeVoiceId || undefined)
       .then((res) => {
         setBriefing(res);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error('Audio briefing error:', err);
+        setLoading(false);
+      });
+  };
 
+  useEffect(() => {
+    loadBriefing();
     return () => {
       stopPlayback();
     };
-  }, [trail, hikerName]);
+  }, [trail, activeVoiceId]);
 
   const stopPlayback = () => {
     if ('speechSynthesis' in window) {
@@ -53,6 +71,9 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
     setProgress(0);
   };
 
+  // Determine if we have real ElevenLabs audio (audio_base64 > 5000 chars)
+  const isRealElevenLabsAudio = Boolean(briefing?.audio_base64 && briefing.audio_base64.length > 5000);
+
   const handleTogglePlay = () => {
     if (!briefing) return;
 
@@ -62,12 +83,12 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
       setIsPlaying(true);
 
       // Check if we have audio_base64 from ElevenLabs
-      if (briefing.audio_base64) {
+      if (isRealElevenLabsAudio && briefing.audio_base64) {
         try {
           const audio = new Audio(`data:${briefing.audio_mime_type};base64,${briefing.audio_base64}`);
           audioRef.current = audio;
-          audio.play().catch(() => {
-            // Fallback to Web Speech API
+          audio.play().catch((err) => {
+            console.warn('Audio tag play failed, falling back to speech synthesis:', err);
             playWithSpeechSynthesis(briefing.transcript);
           });
           audio.onended = () => {
@@ -81,7 +102,7 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
         playWithSpeechSynthesis(briefing.transcript);
       }
 
-      // Smooth progress bar simulation
+      // Progress bar simulation
       const startTime = Date.now();
       const totalDurationMs = (briefing.duration_seconds || 45) * 1000;
       progressTimerRef.current = window.setInterval(() => {
@@ -112,9 +133,11 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
 
   if (!trail) return null;
 
+  const currentVoiceObj = CURATED_VOICES.find((v) => v.id === selectedVoice);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bark-950/60 backdrop-blur-sm">
-      <div className="bg-parchment-50 rounded-2xl border border-parchment-300 shadow-2xl max-w-xl w-full p-6 md:p-8 relative overflow-hidden">
+      <div className="bg-parchment-50 rounded-2xl border border-parchment-300 shadow-2xl max-w-xl w-full p-6 md:p-8 relative overflow-hidden max-h-[92vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={() => {
@@ -135,27 +158,104 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
         <h3 className="font-serif font-bold text-2xl text-bark-900 leading-tight mb-1">
           {trail.name}
         </h3>
-        <p className="text-xs text-bark-600 font-sans mb-6">
+        <p className="text-xs text-bark-600 font-sans mb-5">
           Zero-Screen Philosophy: Listen at the trailhead, tuck your phone away into your pack, and touch grass.
         </p>
 
-        {/* Name personalization input */}
-        <div className="flex items-center space-x-3 mb-6 bg-parchment-100 p-3 rounded-xl border border-parchment-300/80">
-          <label htmlFor="hiker-name" className="text-xs font-mono text-bark-600 flex-shrink-0">
-            Hiker Name:
-          </label>
-          <input
-            id="hiker-name"
-            type="text"
-            value={hikerName}
-            onChange={(e) => setHikerName(e.target.value)}
-            placeholder="Your name"
-            className="flex-1 bg-parchment-50 border border-parchment-300 rounded-lg px-2.5 py-1 text-xs text-bark-900 focus:outline-none focus:ring-1 focus:ring-amber-600"
-          />
+        {/* Voice & Personalization Controls */}
+        <div className="space-y-3 mb-6 bg-parchment-100 p-4 rounded-xl border border-parchment-300/80">
+          {/* Hiker Name */}
+          <div className="flex items-center space-x-3">
+            <label htmlFor="hiker-name" className="text-xs font-mono text-bark-600 w-24 flex-shrink-0">
+              Hiker Name:
+            </label>
+            <input
+              id="hiker-name"
+              type="text"
+              value={hikerName}
+              onChange={(e) => setHikerName(e.target.value)}
+              onBlur={loadBriefing}
+              placeholder="Your name"
+              className="flex-1 bg-parchment-50 border border-parchment-300 rounded-lg px-2.5 py-1 text-xs text-bark-900 focus:outline-none focus:ring-1 focus:ring-amber-600"
+            />
+          </div>
+
+          {/* Voice Selector */}
+          <div className="flex items-center space-x-3">
+            <label htmlFor="voice-select" className="text-xs font-mono text-bark-600 w-24 flex-shrink-0 flex items-center gap-1">
+              <Mic className="w-3 h-3 text-amber-700" />
+              Voice Guide:
+            </label>
+            <select
+              id="voice-select"
+              value={selectedVoice}
+              onChange={(e) => setSelectedVoice(e.target.value)}
+              className="flex-1 bg-parchment-50 border border-parchment-300 rounded-lg px-2.5 py-1 text-xs text-bark-900 font-medium focus:outline-none focus:ring-1 focus:ring-amber-600"
+            >
+              {CURATED_VOICES.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Custom Voice ID Input */}
+          {selectedVoice === 'custom' && (
+            <div className="flex items-center space-x-3 pt-1">
+              <label htmlFor="custom-voice-id" className="text-xs font-mono text-bark-600 w-24 flex-shrink-0">
+                Voice ID:
+              </label>
+              <input
+                id="custom-voice-id"
+                type="text"
+                value={customVoiceId}
+                onChange={(e) => setCustomVoiceId(e.target.value)}
+                onBlur={loadBriefing}
+                placeholder="e.g. nPczCjzI2devNBz1zQrb"
+                className="flex-1 bg-parchment-50 border border-parchment-300 rounded-lg px-2.5 py-1 text-xs text-bark-900 font-mono focus:outline-none focus:ring-1 focus:ring-amber-600"
+              />
+            </div>
+          )}
+
+          {/* Voice description helper */}
+          {currentVoiceObj?.desc && (
+            <p className="text-[11px] text-bark-500 font-sans italic pl-27">
+              {currentVoiceObj.desc}
+            </p>
+          )}
+        </div>
+
+        {/* Engine Status Banner */}
+        <div className="mb-4">
+          {loading ? (
+            <div className="text-[11px] font-mono text-amber-700 flex items-center gap-1.5 animate-pulse">
+              <Sparkles className="w-3.5 h-3.5 animate-spin" />
+              Generating natural audio with ElevenLabs Turbo v2.5...
+            </div>
+          ) : isRealElevenLabsAudio ? (
+            <div className="text-[11px] font-mono text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center justify-between">
+              <span className="flex items-center gap-1.5 font-semibold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                HD Voice Active: {currentVoiceObj?.name || activeVoiceId}
+              </span>
+              <span className="text-[10px] text-emerald-700 opacity-80">ElevenLabs Turbo v2.5</span>
+            </div>
+          ) : (
+            <div className="text-[11px] font-mono text-amber-900 bg-amber-50 border border-amber-300/80 px-3 py-2 rounded-lg flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 leading-snug">
+                <span className="font-semibold block">Browser Synthesizer Mode</span>
+                <span className="text-[10px] text-bark-600">
+                  Ensure <code className="bg-amber-100 px-1 rounded text-amber-950 font-bold">ELEVENLABS_API_KEY</code> is set in your Render environment variables to activate human-like ElevenLabs voice.
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Animated Waveform Visualizer & Audio Player */}
-        <div className="bg-bark-900 text-parchment-100 rounded-xl p-5 mb-6 shadow-inner relative overflow-hidden">
+        <div className="bg-bark-900 text-parchment-100 rounded-xl p-5 mb-5 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[11px] font-mono text-amber-300 uppercase tracking-widest flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-amber-400 animate-ping' : 'bg-parchment-400'}`} />
@@ -197,7 +297,7 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
             <button
               onClick={handleTogglePlay}
               disabled={loading}
-              className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-400 text-bark-950 flex items-center justify-center shadow-lg transition-transform pressable"
+              className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-400 text-bark-950 flex items-center justify-center shadow-lg transition-transform pressable disabled:opacity-50"
             >
               {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
             </button>
@@ -213,7 +313,7 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
         </div>
 
         {/* Transcript Box */}
-        <div className="bg-parchment-100/90 rounded-xl p-4 border border-parchment-300/80 mb-6 max-h-36 overflow-y-auto">
+        <div className="bg-parchment-100/90 rounded-xl p-4 border border-parchment-300/80 mb-5 max-h-32 overflow-y-auto">
           <span className="block text-[10px] font-mono uppercase text-bark-500 mb-1">Trailhead Transcript:</span>
           <p className="font-serif text-xs leading-relaxed text-bark-800 italic">
             "{briefing?.transcript || 'Loading briefing transcript...'}"
@@ -222,7 +322,7 @@ export const AudioBriefingModal: React.FC<AudioBriefingModalProps> = ({ trail, o
 
         {/* Sign-off badge */}
         <div className="flex items-center justify-between text-xs text-bark-600 font-mono pt-2 border-t border-parchment-200">
-          <span>Engine: ElevenLabs Turbo v2.5</span>
+          <span>Engine: {briefing?.voice_engine || 'ElevenLabs Turbo v2.5'}</span>
           <span className="text-terracotta-700 font-semibold">Touch Grass Certified 🥾</span>
         </div>
       </div>

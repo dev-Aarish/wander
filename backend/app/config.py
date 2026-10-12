@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # ElevenLabs TTS
     ELEVENLABS_API_KEY: str = ""
-    ELEVENLABS_VOICE_ID: str = "21m00Tcm4TlvDq8ikWAM"  # Default clean narrator voice (Rachel)
+    ELEVENLABS_VOICE_ID: str = "nPczCjzI2devNBz1zQrb"  # Default rich nature storyteller voice (Brian)
 
     # Temporal Workflow Orchestration
     TEMPORAL_HOST: str = "localhost:7233"
