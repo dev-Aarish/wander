@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  
+  --color-forest: #1A4234;
+  --color-amber: #D97706;
+  --color-terracotta: #C2410C;
+  --color-ochre: #CA8A04;
+  --color-parchment: #FAF6EE;
+  --color-bark: #22211D;
+}
+
+/* Emil's Button Press Principle: Every pressable element feels responsive */
+.pressable {
+  transition: transform 160ms var(--ease-out), filter 160ms var(--ease-out);
+  will-change: transform;
+}
+
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* Card hover feedback gated behind fine pointers */
+@media (hover: hover) and (pointer: fine) {
+  .interactive-card {
+    transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 220ms var(--ease-out);
+  }
+  .interactive-card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4ECE0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C8B598;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #AFA084;
+}
+
+/* Realistic field notebook paper texture watermark */
+.paper-texture {
+  background-image: radial-gradient(#3D3428 0.5px, transparent 0.5px);
+  background-size: 20px 20px;
+  opacity: 0.035;
+}
+
+/* Elevation contour lines overlay */
+.topo-pattern {
+  background-image: repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 24px, rgba(34, 33, 29, 0.03) 25px, transparent 26px);
+}
+
+/* Print Styles for the 1-Page Pocket Guide */
+@media print {
+  @page {
+    size: portrait;
+    margin: 10mm 12mm;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #FFFFFF !important;
+    color: #1F1B16 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    scroll-behavior: auto !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* When printing the pocket field guide, hide all page background elements */
+  body.pocket-card-modal-open,
+  body:has(.print-pocket-card) {
+    background: #FFFFFF !important;
+  }
+
+  body.pocket-card-modal-open header,
+  body.pocket-card-modal-open main,
+  body.pocket-card-modal-open footer,
+  body.pocket-card-modal-open canvas,
+  body:has(.print-pocket-card) header,
+  body:has(.print-pocket-card) main,
+  body:has(.print-pocket-card) footer,
+  body:has(.print-pocket-card) canvas {
+    display: none !important;
+  }
+
+  body.pocket-card-modal-open .min-h-screen,
+  body:has(.print-pocket-card) .min-h-screen {
+    min-height: 0 !important;
+    height: auto !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Reset modal overlay container so it flows as a clean, single-page print element */
+  .pocket-card-modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    z-index: auto !important;
+  }
+
+  /* Reset modal scroll wrapper */
+  .pocket-card-modal-scroll {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  /* Reset modal dialog box wrapper */
+  .pocket-card-modal-content {
+    position: static !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* The 1-page printable pocket field card */
+  .print-pocket-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    margin: 4mm auto !important;
+    max-width: 720px !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    background-color: #FAF8F5 !important;
+    border: 2px solid #3D3428 !important;
+    outline: 1px solid #7A6F5D !important;
+    outline-offset: -5px !important;
+    border-radius: 4px !important;
+    padding: 22px !important;
+    box-sizing: border-box !important;
+  }
+
+  .page-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+
