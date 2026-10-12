@@ -37,11 +37,11 @@ services:
         sync: false
       - key: TIGER_DATA_API_KEY
         sync: false
-      # ElevenLabs Audio Briefings (Optional: graceful synthesis fallback if omitted)
+      # ElevenLabs Audio Briefings (Optional: prompts for key & custom voice ID)
       - key: ELEVENLABS_API_KEY
         sync: false
       - key: ELEVENLABS_VOICE_ID
-        value: 21m00Tcm4TlvDq8ikWAM
+        sync: false
       # TabPFN Prior Labs Model API (Optional: physics-calibrated fallback if omitted)
       - key: TABPFN_API_KEY
         sync: false

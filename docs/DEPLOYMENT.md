@@ -47,7 +47,8 @@ In your Render Dashboard for `wander-api`, configure your secret partner API key
 | Variable | Description | Default / Fallback |
 | :--- | :--- | :--- |
 | `DATABASE_URL` | Tiger Data PostgreSQL + pgvector connection string | In-memory / local vector store fallback |
-| `ELEVENLABS_API_KEY` | ElevenLabs voice synthesis API key | Pre-generated realistic audio briefing fallback |
+| `ELEVENLABS_API_KEY` | ElevenLabs voice synthesis API key | Browser Web Speech fallback |
+| `ELEVENLABS_VOICE_ID` | ElevenLabs Voice ID (e.g. `nPczCjzI2devNBz1zQrb` for Brian, `pNInz6obpgDQGcFmaJgB` for Adam) | `21m00Tcm4TlvDq8ikWAM` (Rachel) |
 | `TABPFN_API_KEY` | Prior Labs TabPFN API key | Calibrated USFS/NOAA biophysical phenology model |
 | `TEMPORAL_HOST` | Temporal workflow orchestrator host | In-process asynchronous task orchestrator |
 
