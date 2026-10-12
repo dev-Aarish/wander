@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     # App config
     PROJECT_NAME: str = "Wander Backend API"
     VERSION: str = "1.0.0"
-    DEBUG: bool = True
-    ENVIRONMENT: str = "development"
+    DEBUG: bool = False
+    ENVIRONMENT: str = "production"
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     
@@ -18,16 +18,22 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        "*"
     ]
 
     @field_validator("CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
+        if isinstance(v, str):
+            v_str = v.strip()
+            if v_str.startswith("[") and v_str.endswith("]"):
+                import json
+                try:
+                    return json.loads(v_str)
+                except Exception:
+                    pass
+            return [i.strip() for i in v_str.split(",") if i.strip()]
         elif isinstance(v, list):
             return v
-        return ["*"]
+        return ["http://localhost:5173", "http://localhost:3000"]
 
     # Tiger Data / PostgreSQL + pgvector
     DATABASE_URL: str = ""

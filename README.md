@@ -163,22 +163,48 @@ curl -X POST http://localhost:8000/api/card/export \
 
 ---
 
+---
+
+## ☁️ Deployment on Render
+
+Wander is fully configured for zero-friction hosting on **[Render](https://render.com)**.
+
+### Option A: One-Click Render Blueprint (Recommended — 100% Free Tier)
+Deploy both the FastAPI backend and React static frontend automatically via Infrastructure as Code:
+1. Connect your repository to Render.
+2. Select **New +** > **Blueprint**.
+3. Select this repository. Render automatically reads [`render.yaml`](./render.yaml), sets up the **FastAPI Web Service** and **React Static Site**, and wires their environment variables together.
+
+### Option B: Unified Container (Single Web Service)
+Build and run the full stack as a single multi-stage Docker container via [`Dockerfile`](./Dockerfile):
+- Select **New +** > **Web Service** on Render with runtime **Docker**.
+- Health Check Path: `/health`.
+
+For full setup details, environment variables, and zero-downtime healthcheck instructions, see **[Render Deployment Guide](docs/DEPLOYMENT.md)**.
+
+---
+
 ## 🌲 Repository Structure
 
 ```
 wander/
 ├── README.md                      # Public documentation & quickstart
+├── render.yaml                    # Render Blueprint Infrastructure as Code
+├── Dockerfile                     # Multi-stage production container
+├── .dockerignore                  # Docker build exclusions
+├── .python-version                # Python 3.12 runtime specification
 ├── AGENT.md                       # Master context & hackathon strategy
 ├── WANDER_SPEC.md                 # Technical specification
 ├── .gitignore                     # Git ignore rules
 │
 ├── docs/                          # In-depth architectural & API documentation
 │   ├── ARCHITECTURE.md            # Detailed system design & flowcharts
-│   └── API_REFERENCE.md           # Comprehensive REST API specifications
+│   ├── API_REFERENCE.md           # Comprehensive REST API specifications
+│   └── DEPLOYMENT.md              # Complete Render hosting & runbook
 │
 ├── backend/                       # Python FastAPI Backend
 │   ├── app/
-│   │   ├── main.py                # FastAPI entry point & CORS
+│   │   ├── main.py                # FastAPI entry point, CORS & static SPA serving
 │   │   ├── config.py              # Pydantic Settings configuration
 │   │   ├── api/                   # Modular REST route handlers
 │   │   │   ├── trails.py          # GET /api/trails
@@ -198,9 +224,14 @@ wander/
 │   │   ├── seed_trails.json       # Curated trails across US autumn regions
 │   │   └── phenology_dataset.csv  # USFS & NOAA historical training data
 │   ├── requirements.txt
+│   ├── .python-version
 │   └── .env.example
 │
-└── frontend/                      # React + Vite + Tailwind UI (Upcoming)
+└── frontend/                      # React + Vite + Tailwind UI
+    ├── src/                       # Components, views, animations & API client
+    ├── package.json
+    ├── .env.example
+    └── vite.config.ts
 ```
 
 ---

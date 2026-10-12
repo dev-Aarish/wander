@@ -1,0 +1,79 @@
+# ==============================================================================
+# Render Blueprint Specification for Wander
+# Open Phenology & Fall Peak Foliage Forecaster (Hacktoberfest 2026)
+# ==============================================================================
+# Docs: https://render.com/docs/blueprint-spec
+# Free Tier Architecture:
+# - Backend: 1 Python Web Service (FastAPI)
+# - Frontend: 1 Free Static Site (Vite + React) with global CDN & SPA rewrite
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Wander API (FastAPI Backend Web Service)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: wander-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: HOST
+        value: 0.0.0.0
+      # Tiger Data / PostgreSQL with pgvector (Optional: operates in local store mode if omitted)
+      - key: DATABASE_URL
+        sync: false
+      - key: TIGER_DATA_API_KEY
+        sync: false
+      # ElevenLabs Audio Briefings (Optional: graceful synthesis fallback if omitted)
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_ID
+        value: 21m00Tcm4TlvDq8ikWAM
+      # TabPFN Prior Labs Model API (Optional: physics-calibrated fallback if omitted)
+      - key: TABPFN_API_KEY
+        sync: false
+      - key: TABPFN_DEVICE
+        value: cpu
+      - key: TABPFN_N_ENSEMBLE
+        value: "8"
+      # Temporal Workflow Engine (Optional: in-process async fallback if omitted)
+      - key: TEMPORAL_HOST
+        sync: false
+      - key: TEMPORAL_NAMESPACE
+        value: default
+      - key: TEMPORAL_TASK_QUEUE
+        value: foliage-sync-queue
+
+  # ----------------------------------------------------------------------------
+  # 2. Wander Web Client (React + Vite Static Site)
+  # ----------------------------------------------------------------------------
+  - type: static
+    name: wander-web
+    plan: free
+    region: oregon
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: wander-api
+          property: host

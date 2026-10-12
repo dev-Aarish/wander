@@ -1,7 +1,16 @@
 import { Trail, PocketCardResponse, AudioBriefingResponse, TabPFNPredictionResponse, PhenologyTimelinePoint } from '../types';
 import { INITIAL_TRAILS } from './mockData';
 
-const BASE_URL = '/api';
+const getBaseUrl = (): string => {
+  let envUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+  if (!envUrl) return '/api';
+  if (!envUrl.startsWith('http://') && !envUrl.startsWith('https://')) {
+    envUrl = `https://${envUrl}`;
+  }
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;
+};
+
+const BASE_URL = getBaseUrl();
 
 export async function fetchTrails(params?: {
   region?: string;
