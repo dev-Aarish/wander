@@ -3,9 +3,10 @@
 # Open Phenology & Fall Peak Foliage Forecaster (Hacktoberfest 2026)
 # ==============================================================================
 # Docs: https://render.com/docs/blueprint-spec
-# Free Tier Architecture:
-# - Backend: 1 Python Web Service (FastAPI)
-# - Frontend: 1 Free Static Site (Vite + React) with global CDN & SPA rewrite
+# Schema: https://render.com/schema/render.yaml.json
+# Architecture:
+# - Backend: 1 Python Web Service (FastAPI) on Free tier
+# - Frontend: 1 Static Site (type: web, runtime: static) on Global CDN (Free)
 # ==============================================================================
 
 services:
@@ -58,11 +59,11 @@ services:
 
   # ----------------------------------------------------------------------------
   # 2. Wander Web Client (React + Vite Static Site)
+  # In Render Blueprints, static sites are defined with type: web and runtime: static
   # ----------------------------------------------------------------------------
-  - type: static
+  - type: web
     name: wander-web
-    plan: free
-    region: oregon
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist

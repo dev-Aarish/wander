@@ -34,7 +34,7 @@ Render will detect `render.yaml` and configure:
    - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
    - **Health Check Path**: `/health`
 2. **`wander-web` (Static Site)**:
-   - **Environment**: Static
+   - **Type / Runtime**: `type: web` + `runtime: static` (Official Render Blueprint schema for static sites)
    - **Root Directory**: `frontend`
    - **Build Command**: `npm install && npm run build`
    - **Publish Directory**: `dist`
