@@ -4,6 +4,10 @@ import { INITIAL_TRAILS } from './mockData';
 const getBaseUrl = (): string => {
   let envUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
   if (!envUrl) return '/api';
+  // Render Blueprint fromService often injects bare hostname e.g. "wander-api-7t4f" without ".onrender.com"
+  if (!envUrl.includes('.') && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    envUrl = `${envUrl}.onrender.com`;
+  }
   if (!envUrl.startsWith('http://') && !envUrl.startsWith('https://')) {
     envUrl = `https://${envUrl}`;
   }
